@@ -63,7 +63,7 @@ function openDB() {
 		console.log("openDB error");
 	}
 }
-//openDB();
+openDB();
 
 function addYutub(){
 	var tx = db.transaction([TABYUTUB], "readwrite");
@@ -142,8 +142,8 @@ function findAllFriend() {
 	cursor.onsuccess = function (e) {
 		var res = e.target.result;
 		if (res) {
-		  console.log("key", res.key);
-		  console.log("value", res.value);
+		  //console.log("key", res.key);
+		  console.log(JSON.stringify(res.value),",");
 		  res.continue();
 		}
 	};
