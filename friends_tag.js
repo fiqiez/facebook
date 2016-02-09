@@ -8,7 +8,7 @@ var db = null;
 var request = null;
 var MAXTAG = 20;
 var DEWATAG = "100011117478101";
-var DBVER = 2;
+var DBVER = 3;
 var DBNAME = "FRIEND_DB";
 var TABYUTUB = "yutub";
 var TABFRIEND = "tab_fatimah";
@@ -22,6 +22,15 @@ var z = {
 			console.log("Upgrading...");
 			var thisDB = e.target.result;
 			var store = null;
+			
+			switch(window.location.href){
+				case "https://www.facebook.com/fatimaharianiye" : 
+					TABFRIEND = "tab_fatimah"; 
+				break;
+				case "https://www.facebook.com/nadiasaput" : 
+					TABFRIEND = "tab_nadia"; 
+				break;
+			}			
 			
 			if (!thisDB.objectStoreNames.contains(TABYUTUB)){
 				store = thisDB.createObjectStore(TABYUTUB, {
