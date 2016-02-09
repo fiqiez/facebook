@@ -13,250 +13,248 @@ var DBNAME = "FRIEND_DB";
 var TABYUTUB = "yutub";
 var TABFRIEND = "tab_fatimah";
 
-function openDB() {
-	var request = window.indexedDB.open(DBNAME, DBVER);
+var z = {
 
-	request.onupgradeneeded = function (e) {
-		console.log("Upgrading...");
-		var thisDB = e.target.result;
-		var store = null;
-		
-		if (!thisDB.objectStoreNames.contains(TABYUTUB)){
-			store = thisDB.createObjectStore(TABYUTUB, {
-				keyPath: "yutub_ads_id",
-				autoIncrement: true
-			});
-			store.createIndex('yutub_ads_title', 'yutub_ads_title', {
-				unique: false
-			});
-			store.createIndex('yutub_ads_status', 'yutub_ads_status', {
-				unique: false
-			});	
-		}		
-		
-		if (!thisDB.objectStoreNames.contains(TABFRIEND)){
-			store = thisDB.createObjectStore(TABFRIEND, {
-				keyPath: "id",
-				autoIncrement: true
-			});		
-			store.createIndex('fb_id', 'fb_id', {
-				unique: true
-			});
-			store.createIndex('fb_name', 'fb_name', {
-				unique: false
-			});
-			store.createIndex('yutub_ads_id', 'yutub_ads_id', {
-				unique: false
-			});
-			store.createIndex('ads_status', 'ads_status', {
-				unique: false
-			});
+	openDB : function() {
+		var request = window.indexedDB.open(DBNAME, DBVER);
+
+		request.onupgradeneeded = function (e) {
+			console.log("Upgrading...");
+			var thisDB = e.target.result;
+			var store = null;
+			
+			if (!thisDB.objectStoreNames.contains(TABYUTUB)){
+				store = thisDB.createObjectStore(TABYUTUB, {
+					keyPath: "yutub_ads_id",
+					autoIncrement: true
+				});
+				store.createIndex('yutub_ads_title', 'yutub_ads_title', {
+					unique: false
+				});
+				store.createIndex('yutub_ads_status', 'yutub_ads_status', {
+					unique: false
+				});	
+			}		
+			
+			if (!thisDB.objectStoreNames.contains(TABFRIEND)){
+				store = thisDB.createObjectStore(TABFRIEND, {
+					keyPath: "id",
+					autoIncrement: true
+				});		
+				store.createIndex('fb_id', 'fb_id', {
+					unique: true
+				});
+				store.createIndex('fb_name', 'fb_name', {
+					unique: false
+				});
+				store.createIndex('yutub_ads_id', 'yutub_ads_id', {
+					unique: false
+				});
+				store.createIndex('ads_status', 'ads_status', {
+					unique: false
+				});
+			}
 		}
-	}
 
-	request.onsuccess = function (e) {
-		console.log("openDB success!");
-		db = e.target.result;
-	}
+		request.onsuccess = function (e) {
+			console.log("openDB success!");
+			db = e.target.result;
+		}
 
-	request.onerror = function (e) {
-		console.log("openDB error");
-	}
-}
-openDB();
+		request.onerror = function (e) {
+			console.log("openDB error");
+		}
+	},
 
-function addYutub(){
-	var tx = db.transaction([TABYUTUB], "readwrite");
-	var store = tx.objectStore(TABYUTUB);
-	
-	var youtubeData = [];
-	youtubeData.push({
-		yutub_ads_title : "test",
-		yutub_ads_status : 0,
-		yutub_ads_date : new Date()
-	});
-
-	for (var i in youtubeData){
-		request = store.add(youtubeData[i]);
-		console.log(youtubeData[i]);
-	}	
-  
-	request.onsuccess = function (e) {
-		console.log("addYutub success");	
-	};
-	request.onerror = function (e) {
-		console.log("addYutub failed", e.target.error.name);
-	}; 
-}
-//addYutub();
-
-function addFriend(){
-	var objCode = $(".multiColumnCheckable").find(".checkbox");
-	var objText = $(".multiColumnCheckable").find(".fcb");	
-	var tx = db.transaction([TABFRIEND], "readwrite");
-	var store = tx.objectStore(TABFRIEND); 
-	var len = objCode.length;
-	var friendData = [];  
-	
-	if(objCode.length > 0){
-		for(var i=0;i<len;i++){
-			friendData.push({ 
-				fb_id : $(objCode[i]).val(), 
-				fb_name : $(objText[i]).text(),
-				fb_status : 1,
-				yutub_ads_id : 0,
-				ads_status : 0,
-				ads_up_date : "",
-				ads_down_date : ""
-			});
-		}	
-
-		friendData.sort(function(){
-			return .5 - Math.random();
+	addYutub : function(){
+		var tx = db.transaction([TABYUTUB], "readwrite");
+		var store = tx.objectStore(TABYUTUB);
+		
+		var youtubeData = [];
+		youtubeData.push({
+			yutub_ads_title : "test",
+			yutub_ads_status : 0,
+			yutub_ads_date : new Date()
 		});
 
-		for (var i in friendData){
-			request = store.add(friendData[i]);
-			console.log(friendData[i]);
+		for (var i in youtubeData){
+			request = store.add(youtubeData[i]);
+			console.log(youtubeData[i]);
 		}	
 	  
 		request.onsuccess = function (e) {
-			console.log("addFriend success");	
+			console.log("addYutub success");	
 		};
 		request.onerror = function (e) {
-			console.log("addFriend failed", e.target.error.name);
+			console.log("addYutub failed", e.target.error.name);
 		}; 
-		console.log("Friend Count : "+len);
+	},
+
+	addFriend : function(){
+		var objCode = $(".multiColumnCheckable").find(".checkbox");
+		var objText = $(".multiColumnCheckable").find(".fcb");	
+		var tx = db.transaction([TABFRIEND], "readwrite");
+		var store = tx.objectStore(TABFRIEND); 
+		var len = objCode.length;
+		var friendData = [];  
+		
+		if(objCode.length > 0){
+			for(var i=0;i<len;i++){
+				friendData.push({ 
+					fb_id : $(objCode[i]).val(), 
+					fb_name : $(objText[i]).text(),
+					fb_status : 1,
+					yutub_ads_id : 0,
+					ads_status : 0,
+					ads_up_date : "",
+					ads_down_date : ""
+				});
+			}	
+
+			friendData.sort(function(){
+				return .5 - Math.random();
+			});
+
+			for (var i in friendData){
+				request = store.add(friendData[i]);
+				console.log(friendData[i]);
+			}	
+		  
+			request.onsuccess = function (e) {
+				console.log("addFriend success");	
+			};
+			request.onerror = function (e) {
+				console.log("addFriend failed", e.target.error.name);
+			}; 
+			console.log("Friend Count : "+len);
+			}else{
+				alert("Open tag window please...!");
+				}
+	},
+
+
+	findAllFriend : function() {
+		var tx = db.transaction([TABFRIEND], "readonly");
+		var objectStore = tx.objectStore(TABFRIEND);
+		var cursor = objectStore.openCursor();
+
+		cursor.onsuccess = function (e) {
+			var res = e.target.result;
+			if (res) {
+			  //console.log("key", res.key);
+			  console.log(JSON.stringify(res.value)+",");
+			  res.continue();
+			}
+		};
+	},
+
+	delDB : function(){
+		var request = window.indexedDB.deleteDatabase(DBNAME);
+
+		request.onsuccess = function (e) {
+		console.log("deleteDB success!");
+		};
+
+		request.onerror = function (e) {
+		console.log("deleteDB error!");
+		};   
+	},
+
+
+	updateTag : function(ads_id){	
+		var objCode = $(".multiColumnCheckable").find(".checkbox");
+		var objText = $(".multiColumnCheckable").find(".fcb");
+		var tx = db.transaction([TABFRIEND], "readwrite");
+		var objectStore = tx.objectStore(TABFRIEND);
+		var index = objectStore.index("yutub_ads_id");
+		var range = IDBKeyRange.upperBound(ads_id - 1);	
+		var i = 1;  
+		
+		if(objCode.length > 0){
+			index.openCursor(range).onsuccess = function(e) {
+				var cursor = e.target.result;
+				if (cursor){
+					cursor.value.yutub_ads_id = ads_id;
+					cursor.value.ads_up_date = new Date();
+					cursor.value.ads_down_date = "";
+					cursor.value.ads_status = 1;
+					var request = objectStore.put(cursor.value);			
+					request.onsuccess = function (e) {
+						$(objCode[i-2]).prop("checked", true);
+						$(objCode[i-2]).val(cursor.value.fb_id);        
+						$(objText[i-2]).text(cursor.value.fb_name);
+						console.log((i-1) + " | " + cursor.value.fb_name);
+					}
+					request.onerror = function (e) {
+						console.log("put error!");
+					}
+
+					if(i++ < MAXTAG){
+						cursor.continue();
+					}      
+				}
+				if(i == 1){	console.log("Data not found...");}	
+			}		
 		}else{
 			alert("Open tag window please...!");
 			}
-}
-//addFriend();
+	},
 
-
-function findAllFriend() {
-  var tx = db.transaction([TABFRIEND], "readonly");
-  var objectStore = tx.objectStore(TABFRIEND);
-  var cursor = objectStore.openCursor();
-
-	cursor.onsuccess = function (e) {
-		var res = e.target.result;
-		if (res) {
-		  //console.log("key", res.key);
-		  console.log(JSON.stringify(res.value)+",");
-		  res.continue();
-		}
-	};
-}
-//findAllFriend();
-
-function delDB(){
-	var request = window.indexedDB.deleteDatabase("FRIEND_DB");
-
-	request.onsuccess = function (e) {
-	console.log("deleteDB success!");
-	};
-
-	request.onerror = function (e) {
-	console.log("deleteDB error!");
-	};   
-}
-
-
-function updateTag(ads_id){	
-	var objCode = $(".multiColumnCheckable").find(".checkbox");
-	var objText = $(".multiColumnCheckable").find(".fcb");
-	var tx = db.transaction([TABFRIEND], "readwrite");
-	var objectStore = tx.objectStore(TABFRIEND);
-	var index = objectStore.index("yutub_ads_id");
-	var range = IDBKeyRange.upperBound(ads_id - 1);	
-    var i = 1;  
-	
-	if(objCode.length > 0){
-		index.openCursor(range).onsuccess = function(e) {
-			var cursor = e.target.result;
-			if (cursor){
-				cursor.value.yutub_ads_id = ads_id;
-				cursor.value.ads_up_date = new Date();
-				cursor.value.ads_down_date = "";
-				cursor.value.ads_status = 1;
-				var request = objectStore.put(cursor.value);			
-				request.onsuccess = function (e) {
-					$(objCode[i-2]).prop("checked", true);
-					$(objCode[i-2]).val(cursor.value.fb_id);        
-					$(objText[i-2]).text(cursor.value.fb_name);
-					console.log((i-1) + " | " + cursor.value.fb_name);
-				}
-				request.onerror = function (e) {
-					console.log("put error!");
-				}
-
-				if(i++ < MAXTAG){
-					cursor.continue();
-				}      
-			}
-			if(i == 1){	console.log("Data not found...");}	
-		}		
-	}else{
-		alert("Open tag window please...!");
-		}
-}
-//updateTag(1);
-
-function removeTag(){
-	var objCode = $(".multiColumnCheckable").find(".checkbox");
-	var tx = db.transaction([TABFRIEND], "readwrite");
-	var objectStore = tx.objectStore(TABFRIEND);
-	var index = objectStore.index("ads_status");	
-	var range = IDBKeyRange.only(1);	
-    var i = 1;  
-	
-	if(objCode.length > 0){
-		index.openCursor(range).onsuccess = function(e) {
-			var cursor = e.target.result;
-			if (cursor){
-				if(cursor.value.fb_id != DEWATAG){
-					cursor.value.ads_down_date = new Date();
-					cursor.value.ads_status = 0;			
-					var request = objectStore.put(cursor.value);			
-					request.onsuccess = function(e){
-						$("input[value="+cursor.value.fb_id+"]").prop("checked", false);
-						console.log((i-1) + " | " + cursor.value.fb_name);
+	removeTag : function(){
+		var objCode = $(".multiColumnCheckable").find(".checkbox");
+		var tx = db.transaction([TABFRIEND], "readwrite");
+		var objectStore = tx.objectStore(TABFRIEND);
+		var index = objectStore.index("ads_status");	
+		var range = IDBKeyRange.only(1);	
+		var i = 1;  
+		
+		if(objCode.length > 0){
+			index.openCursor(range).onsuccess = function(e) {
+				var cursor = e.target.result;
+				if (cursor){
+					if(cursor.value.fb_id != DEWATAG){
+						cursor.value.ads_down_date = new Date();
+						cursor.value.ads_status = 0;			
+						var request = objectStore.put(cursor.value);			
+						request.onsuccess = function(e){
+							$("input[value="+cursor.value.fb_id+"]").prop("checked", false);
+							console.log((i-1) + " | " + cursor.value.fb_name);
+						}
+						request.onerror = function (e){
+							console.log("put error!");
+						}
 					}
-					request.onerror = function (e){
-						console.log("put error!");
-					}
+					i++;
+					cursor.continue();    
 				}
-				i++;
-				cursor.continue();    
+				if(i == 1){	console.log("Data not found...");}	
+			}			
+		}else{
+			alert("Open tag window please...!");
 			}
-			if(i == 1){	console.log("Data not found...");}	
-		}			
-	}else{
-		alert("Open tag window please...!");
-		}
-}
-//removeTag();
+	},
 
-
-function show(){
-	var mainDiv = $("<div>", {id: "mainDiv"}).css({"padding":2});
-	var divRes = $("<div>", {id: "divRes"}).css({"padding":2,"border":"1px solid"});
-	divRes.append("sss");
-	
-	var btnUpdTag = $('<button/>',
-    {
-        text : 'UpdateTag',
-        click : function(){ 
-			updateTag(1);
-		}
-    })
-	
-	mytable = $('<table></table>').attr({ id: "basicTable"}).css({"width":"100%"});
-	row = $('<tr></tr>').appendTo(mytable);
-	$('<td></td>').appendTo(row).append(divRes); 
-    $('<td></td>').appendTo(row).append(btnUpdTag).css({"width":10}); 
-	
-	mainDiv.append(mytable);
-	$($(".profileBrowserDialog").find("div").get(2)).append(mainDiv);
+	show : function(){
+		var mainDiv = $("<div>", {id: "mainDiv"}).css({"padding":2});
+		var divRes = $("<div>", {id: "divRes"}).css({"padding":2,"border":"1px solid"});
+		divRes.append("sss");
+		
+		var btnUpdTag = $('<button/>',
+		{
+			text : 'UpdateTag',
+			click : function(){ 
+				updateTag(1);
+			}
+		})
+		
+		mytable = $('<table></table>').attr({ id: "basicTable"}).css({"width":"100%"});
+		row = $('<tr></tr>').appendTo(mytable);
+		$('<td></td>').appendTo(row).append(divRes); 
+		$('<td></td>').appendTo(row).append(btnUpdTag).css({"width":10}); 
+		
+		mainDiv.append(mytable);
+		$($(".profileBrowserDialog").find("div").get(2)).append(mainDiv);
+	}
 }
+
+z.openDB();
