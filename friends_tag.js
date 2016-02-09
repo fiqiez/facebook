@@ -143,7 +143,7 @@ function findAllFriend() {
 		var res = e.target.result;
 		if (res) {
 		  //console.log("key", res.key);
-		  console.log(JSON.stringify(res.value),",");
+		  console.log(JSON.stringify(res.value)+",");
 		  res.continue();
 		}
 	};
