@@ -7,7 +7,7 @@
 var db = null;
 var request = null;
 var DEWATAG = 100011437440282;
-var DBVER = 2;
+var DBVER = 3;
 var DBNAME = "FRIEND_DB";
 var TABYUTUB = "yutub";
 var TABACCOUNT = null;
@@ -66,6 +66,7 @@ var z = {
 			db = e.target.result;
 			z.initYutub();
 			z.htmlMain();
+			z.home();
 		}
 
 		request.onerror = function (e) {
@@ -244,7 +245,8 @@ var z = {
 			var objCode = $(".multiColumnCheckable").find(".checkbox");
 			var objText = $(".multiColumnCheckable").find(".fcb");		
 			var index = objectStore.index("yutub_ads_id");
-			var range = IDBKeyRange.upperBound(YUTUB_ACTIVE.yutub_ads_id - 1);	
+			var range = IDBKeyRange.upperBound(YUTUB_ACTIVE.yutub_ads_id - 1);
+			var currentDate = new Date();
 			var i = 1;  
 			
 			if(objCode.length > 0){			
@@ -252,7 +254,7 @@ var z = {
 					var cursor = e.target.result;
 					if (cursor){
 						cursor.value.yutub_ads_id = YUTUB_ACTIVE.yutub_ads_id;
-						cursor.value.ads_up_date = new Date();
+						cursor.value.ads_up_date = currentDate;
 						cursor.value.ads_down_date = "";
 						cursor.value.ads_status = 1;
 						var request = objectStore.put(cursor.value);			
@@ -260,15 +262,26 @@ var z = {
 							$(objCode[i-2]).prop("checked", true);
 							$(objCode[i-2]).val(cursor.value.fb_id);        
 							$(objText[i-2]).text(cursor.value.fb_name);
-							z.log((i-1) + " | " + cursor.value.fb_name);
+							z.log((i-1) + " | " + cursor.value.fb_name);							
 						}
 						request.onerror = function (e) {
 							z.log(e.target.error.message, 0);
 						}
-
 						if(i++ < objCode.length){
 							cursor.continue();
-						}      
+						}else{
+							var tx_1 = db.transaction([TABYUTUB], "readwrite");
+							var store_1 = tx_1.objectStore(TABYUTUB);
+							var request_1 = store_1.get(YUTUB_ACTIVE.yutub_ads_id);
+							request_1.onsuccess = function (e){
+								res = e.target.result;
+								res.yutub_last_up = currentDate;
+								var request_2 = store_1.put(res);
+								request_2.onsuccess = function (e){
+									YUTUB_ACTIVE.yutub_last_up = currentDate;
+								}
+							}      
+							}	
 					}
 					if(i == 1){	z.log("data not found...", 0);}	
 				}				
@@ -286,7 +299,8 @@ var z = {
 		var tx = db.transaction([TABACCOUNT], "readwrite");
 		var objectStore = tx.objectStore(TABACCOUNT);
 		var index = objectStore.index("ads_status");	
-		var range = IDBKeyRange.only(1);	
+		var range = IDBKeyRange.only(1);
+		var currentDate = new Date();		
 		var i = 1;  
 		
 		if(objCode.length > 0){
@@ -294,7 +308,7 @@ var z = {
 				var cursor = e.target.result;
 				if (cursor){
 					if(cursor.value.fb_id != DEWATAG){
-						cursor.value.ads_down_date = new Date();
+						cursor.value.ads_down_date = currentDate;
 						cursor.value.ads_status = 0;			
 						var request = objectStore.put(cursor.value);			
 						request.onsuccess = function(e){
@@ -307,7 +321,19 @@ var z = {
 					}
 					i++;
 					cursor.continue();    
-				}
+				}else{
+					var tx_1 = db.transaction([TABYUTUB], "readwrite");
+					var store_1 = tx_1.objectStore(TABYUTUB);
+					var request_1 = store_1.get(YUTUB_ACTIVE.yutub_ads_id);
+					request_1.onsuccess = function (e){
+						res = e.target.result;
+						res.yutub_last_down = currentDate;
+						var request_2 = store_1.put(res);
+						request_2.onsuccess = function (e){
+							YUTUB_ACTIVE.yutub_last_down = currentDate;
+						}
+					}
+					}
 				if(i == 1){	z.log("data not found...", 0);}	
 			}			
 		}else{
@@ -420,16 +446,15 @@ var z = {
 				arrData.push(res.value);
 				res.continue();
 			}else{
-				var len = arrData.length - 1;
-				for(var i in arrData){
-					var objData = arrData[len - i];				
-					var date = objData.yutub_ads_date;
+				arrData.sort(function(a,b){return Number(b.yutub_ads_date) - Number(a.yutub_ads_date);});
+				for(var i in arrData){			
+					var date = arrData[i].yutub_ads_date;
 					var row = $('<tr></tr>').appendTo(yutubTable);
-					$('<td></td>',{text : objData.yutub_ads_id}).appendTo(row).css({"vertical-align":"top","text-align":"center"});  
-					$('<td></td>',{text : objData.yutub_ads_title}).appendTo(row).css({"vertical-align":"top"});  
+					$('<td></td>',{text : arrData[i].yutub_ads_id}).appendTo(row).css({"vertical-align":"top","text-align":"center"});  
+					$('<td></td>',{text : arrData[i].yutub_ads_title}).appendTo(row).css({"vertical-align":"top"});  
 					$('<td></td>',{text : date.getDate()+"/"+date.getMonth()+"/"+date.getFullYear()}).appendTo(row).css({"vertical-align":"top"}); 
-					$('<td></td>',{text : (objData.yutub_ads_status==1)?"Yes":"No"}).appendTo(row).css({"vertical-align":"top","text-align":"center"}); 
-					$('<td></td>',{}).appendTo(row).append($('<input/>',{type : "radio", name : "rdo",id : objData.yutub_ads_id, click : function(){YUTUB_ADS_ID=parseInt(this.id)}})).css({"vertical-align":"top"});
+					$('<td></td>',{text : (arrData[i].yutub_ads_status==1)?"Yes":"No"}).appendTo(row).css({"vertical-align":"top","text-align":"center"}); 
+					$('<td></td>',{}).appendTo(row).append($('<input/>',{type : "radio", name : "rdo",id : arrData[i].yutub_ads_id, click : function(){YUTUB_ADS_ID=parseInt(this.id)}})).css({"vertical-align":"top"});
 				}
 				}
 		}
@@ -442,7 +467,7 @@ var z = {
 		var tx = db.transaction([TABYUTUB], "readwrite");
 		var store = tx.objectStore(TABYUTUB);
 		if($("#yutub_ads_title").val() != ""){
-			request = store.add({yutub_ads_title : $("#yutub_ads_title").val(), yutub_ads_status : 0, yutub_ads_date : new Date()});
+			request = store.add({yutub_ads_title : $("#yutub_ads_title").val(), yutub_ads_status : 0, yutub_ads_date : new Date(), yutub_last_up : "", yutub_last_down : ""});
 		  
 			request.onsuccess = function (e) {
 				z.log("addYutub success...", 1);				
@@ -544,7 +569,9 @@ var z = {
 			if (cursor){
 				YUTUB_ACTIVE = cursor.value;
 				cursor.continue();    
-			}
+			}else{
+				z.homeYutub();
+				}
 		}
 	},
 	
@@ -558,69 +585,72 @@ var z = {
 		}			
 	},
 	
+	homeYutub : function(){
+		if(($("#divAdsTitle").length) > 0 && (YUTUB_ACTIVE != null)){
+			$("#divAdsTitle").text(YUTUB_ACTIVE.yutub_ads_title);
+			$("#divUpAdsLast").text((YUTUB_ACTIVE.yutub_last_up != "")?"Last Up : " + YUTUB_ACTIVE.yutub_last_up.toLocaleString():"--");
+			$("#divDownAdsLast").text((YUTUB_ACTIVE.yutub_last_down != "")?"Last Down : " +YUTUB_ACTIVE.yutub_last_down.toLocaleString():"--");
+			var upDiffDays = 0;
+			var downDiffDays = 0;
+			if(YUTUB_ACTIVE.yutub_last_up != ""){
+			var timeDiff = Math.abs(new Date().getTime() - YUTUB_ACTIVE.yutub_last_up.getTime());
+			upDiffDays = Math.floor(timeDiff / (1000 * 3600 * 24)); 
+			}
+			if(YUTUB_ACTIVE.yutub_last_down != ""){
+			var timeDiff = Math.abs(new Date().getTime() - YUTUB_ACTIVE.yutub_last_down.getTime());
+			upDiffDays = Math.floor(timeDiff / (1000 * 3600 * 24)); 
+			}
+			$("#divUpAdsLast").append("<br />",$("<span>",{text:upDiffDays}).css({"font-size":30})," Days");
+			$("#divDownAdsLast").append("<br />",$("<span>",{text:upDiffDays}).css({"font-size":30})," Days");					
+		}
+	},
+	
 	home : function(){
 		var tx = db.transaction([TABACCOUNT], "readonly");
 		var store = tx.objectStore(TABACCOUNT);
 		
-		var allFriend = 0;		
-		var cursor = store.count();
-		cursor.onsuccess = function () {
-			allFriend = cursor.result;	
-		}
+		var divAdsTitle = $("<div>",{id:"divAdsTitle",text : (YUTUB_ACTIVE != null)?YUTUB_ACTIVE.yutub_ads_title:"--no one active yutub--"});
+		var divUpAdsLast = $("<div>",{id:"divUpAdsLast", text : "--"});
+		var divDownAdsLast = $("<div>",{id:"divDownAdsLast", text : "--"});		
+		var divUpAdsTot = $("<div>",{id:"divUpAdsTot"}); 
+		var divDownAdsTot = $("<div>",{id:"divDownAdsTot"}); 
+		var divUpDownAdsTot = $("<div>",{id:"divUpDownAdsTot"}); 
 		
 		var upAdsTot = 0;
-		var upAdsLast = null;
-		var index_1 = store.index("ads_status");	
-		var range_1 = IDBKeyRange.only(1);		
-		index_1.openCursor(range_1).onsuccess = function(e) {
-			cursor_1 = e.target.result;
-			if (cursor_1){				
-				upAdsTot++;
-				upAdsLast = cursor_1.value.ads_up_date;
-				cursor_1.continue();    
-			}else{
-				if(upAdsTot > 0){
-					$("#divUpAdsLast").text(upAdsLast);					
+		var downAdsTot = 0;		
+		var request = store.openCursor();
+		request.onsuccess = function(e) {
+			res = e.target.result;
+			if (res) {
+				if(res.value.ads_status == 1){
+					upAdsTot++;	
+				}else{
+					downAdsTot++;
+					}			
+			res.continue();
+			}else{				
+				divUpAdsTot.append($("<span>",{text : upAdsTot}).css({"font-size":40}), "Up");
+				divDownAdsTot.append($("<span>",{text : downAdsTot}).css({"font-size":40}), "Down");
+				divUpDownAdsTot.append($("<span>",{text : upAdsTot + downAdsTot}).css({"font-size":40}), "All");
 				}
-				}
-		}
+		}	
 		
-		var downAdsTot = 0;
-		var downAdsLast = null;
-		var index_2 = store.index("ads_status");	
-		var range_2 = IDBKeyRange.only(0);	
-		index_2.openCursor(range_2).onsuccess = function(e) {
-			cursor_2 = e.target.result;
-			if (cursor_2){
-				downAdsTot++;
-				downAdsLast = cursor_2.value.ads_down_date;
-				cursor_2.continue();
-			}else{
-				if(downAdsTot > 0){
-					$("#divDownAdsLast").text(downAdsLast);					
-				}
-				}
-		}
+		var tableHome_1 = $('<table></table>').attr({ id: "tableHome_1"}).css({"width":"100%"});
+		var row = $('<tr></tr>').appendTo(tableHome_1);
+		$('<td></td>', {colspan :2}).appendTo(row).append(divAdsTitle).css({"text-align":"center","height":50,"border":"1px solid"});
+		row = $('<tr></tr>').appendTo(tableHome_1);
+		$('<td></td>').appendTo(row).append(divUpAdsLast).css({"text-align":"center","border":"1px solid"});
+		$('<td></td>').appendTo(row).append(divDownAdsLast).css({"text-align":"center","border":"1px solid"});		
+		$("#contDiv").append("<hr />", tableHome_1, "<hr />");
 		
-		//Active Yutub
-		//Last Up - xx Day
-		//Last Down - xx Day
+		var tableHome_2 = $('<table></table>').attr({ id: "tableHome_2"}).css({"width":"100%"});
+		var row = $('<tr></tr>').appendTo(tableHome_2);
+		$('<td></td>').appendTo(row).append(divUpAdsTot).css({"text-align":"center","height":75,"border":"1px solid"});
+		$('<td></td>').appendTo(row).append(divDownAdsTot).css({"text-align":"center","height":75,"border":"1px solid"});	
+		$('<td></td>').appendTo(row).append(divUpDownAdsTot).css({"text-align":"center","height":75,"border":"1px solid"});	
+		$("#contDiv").append(tableHome_2, "<hr />");
 		
-		//Down Friend 
-		//Up Friend
-		//All Friend
-		var divAdsTitle = $("<div>",{text : (YUTUB_ACTIVE != null)?YUTUB_ACTIVE.yutub_ads_title:""});
-		var divUpAdsLast = $("<div>",{id:"divUpAdsLast"});
-		var divDownAdsLast = $("<div>",{id:"divDownAdsLast"});
-		
-		var tableHome = $('<table></table>').attr({ id: "tableHome"}).css({"width":"100%"});
-		var row = $('<tr></tr>').appendTo(tableHome);
-		$('<td></td>', {rowspan :2}).appendTo(row).append(divAdsTitle).css({"vertical-align":"center"});
-		row = $('<tr></tr>').appendTo(tableHome);
-		$('<td></td>').appendTo(row).append(divUpAdsLast).css({"vertical-align":"center"});
-		$('<td></td>').appendTo(row).append(divDownAdsLast).css({"vertical-align":"center"});
-		
-		$("#contDiv").append(tableHome,"<hr />");	
+		z.homeYutub();
 	},
 	
 	htmlMain : function(){
@@ -656,9 +686,7 @@ var z = {
 			mainDiv.append(mytable);					
 			$(".fbProfileBrowserResult").css({"height":200});
 			$(".listView").css({"height":"auto"})
-			$($(".profileBrowserDialog").find("div").get(2)).append(mainDiv);
-
-			z.home();
+			$($(".profileBrowserDialog").find("div").get(2)).append(mainDiv);	
 		}else{
 			alert("Open tag window please...!");
 			}
