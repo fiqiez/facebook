@@ -7,7 +7,9 @@
 var db = null;
 var request = null;
 var DEWATAG = 100011437440282;
-var DBVER = 3;
+var MAXTAG = 100;
+var TIMERTAG = 1000;
+var DBVER = 4;
 var DBNAME = "FRIEND_DB";
 var TABYUTUB = "yutub";
 var TABACCOUNT = null;
@@ -70,7 +72,7 @@ var z = {
 		}
 
 		request.onerror = function (e) {
-			z.log(e.target.error.message, 0);
+			console.log(e.target.error.message, 0);
 		}
 	},
 	
@@ -81,7 +83,6 @@ var z = {
 		var store = tx.objectStore(TABACCOUNT); 
 		var len = objCode.length;
 		var arrData = [];
-		var x = 1;
 		
 		if(objCode.length > 0){
 			for(var i=0;i<len;i++){
@@ -236,55 +237,79 @@ var z = {
 			}; 
 		}
 	},
-
+	
 	updateTag : function(){	
 		var tx = db.transaction([TABACCOUNT], "readwrite");
 		var objectStore = tx.objectStore(TABACCOUNT);
 		
 		if(YUTUB_ACTIVE != null){
-			var objCode = $(".multiColumnCheckable").find(".checkbox");
-			var objText = $(".multiColumnCheckable").find(".fcb");		
+			var objCode = $(".multiColumnCheckable").find(".checkbox");	
 			var index = objectStore.index("yutub_ads_id");
 			var range = IDBKeyRange.upperBound(YUTUB_ACTIVE.yutub_ads_id - 1);
-			var currentDate = new Date();
-			var i = 1;  
+			var currDate = new Date();
+			var arrData = [];
+			var i = 0;
 			
-			if(objCode.length > 0){			
-				index.openCursor(range).onsuccess = function(e) {
-					var cursor = e.target.result;
-					if (cursor){
-						cursor.value.yutub_ads_id = YUTUB_ACTIVE.yutub_ads_id;
-						cursor.value.ads_up_date = currentDate;
-						cursor.value.ads_down_date = "";
-						cursor.value.ads_status = 1;
-						var request = objectStore.put(cursor.value);			
-						request.onsuccess = function (e) {
-							$(objCode[i-2]).prop("checked", true);
-							$(objCode[i-2]).val(cursor.value.fb_id);        
-							$(objText[i-2]).text(cursor.value.fb_name);
-							z.log((i-1) + " | " + cursor.value.fb_name);							
-						}
-						request.onerror = function (e) {
-							z.log(e.target.error.message, 0);
-						}
-						if(i++ < objCode.length){
+			if(objCode.length > 0){
+				if($('a:contains("Search by Name")').length > $('a:contains("Selected")').length){
+					index.openCursor(range).onsuccess = function(e) {
+						var cursor = e.target.result;
+						if (cursor){
+							arrData.push(cursor.value);
 							cursor.continue();
-						}else{
-							var tx_1 = db.transaction([TABYUTUB], "readwrite");
-							var store_1 = tx_1.objectStore(TABYUTUB);
-							var request_1 = store_1.get(YUTUB_ACTIVE.yutub_ads_id);
-							request_1.onsuccess = function (e){
-								res = e.target.result;
-								res.yutub_last_up = currentDate;
-								var request_2 = store_1.put(res);
-								request_2.onsuccess = function (e){
-									YUTUB_ACTIVE.yutub_last_up = currentDate;
-								}
-							}      
-							}	
-					}
-					if(i == 1){	z.log("data not found...", 0);}	
-				}				
+							}else{							
+								var maxRep = 0;
+								var found = false;							
+								var arrDataLen = arrData.length;
+								var arrDataRes = [];					
+								
+								if(arrDataLen > 0){
+									arrData.sort(function(){
+										return .7 - Math.random();
+									});
+									if(arrDataLen > MAXTAG){
+										arrData = arrData.slice(0, MAXTAG);
+										arrDataLen = MAXTAG;
+									}
+									
+									var timer = setInterval(function(){
+										$("input[placeholder='Search all friends']").val(arrData[i].fb_name).focus();
+										var objCB = $("input[value='" + arrData[i].fb_id + "']");
+										if(objCB.length > 0){
+											objCB.click();
+											objCB.focus();
+											found = true;
+										}
+										if(found){
+											util.log((i+1) + " | " + arrData[i].fb_name);
+											arrDataRes.push(arrData[i]);
+											
+											i++;
+											maxRep = 0;
+											found = false;									
+										}else{
+											if((maxRep++) == 5){
+												util.log((i+1) + " | " + arrData[i].fb_name, 0);
+												i++;
+												}								
+											}
+											
+										if(i == arrDataLen){
+											util.log("<hr />", 1);
+											clearInterval(timer);
+											
+											util.setUpTag(arrDataRes, currDate, arrDataRes.length);													
+										}	
+									}, TIMERTAG);							
+								}else{	
+									z.log("data not found...", 0);
+									}		
+								}					
+						}
+
+				}else{
+					z.log("open Search by Name tag please...", 0);
+					}			
 			}else{
 				alert("open tag window please...!");
 				}
@@ -294,48 +319,35 @@ var z = {
 			
 	},
 
-	deleteTag : function(){
+	deleteTag : function(){	
 		var objCode = $(".multiColumnCheckable").find(".checkbox");
-		var tx = db.transaction([TABACCOUNT], "readwrite");
-		var objectStore = tx.objectStore(TABACCOUNT);
-		var index = objectStore.index("ads_status");	
-		var range = IDBKeyRange.only(1);
-		var currentDate = new Date();		
-		var i = 1;  
+		var objText = $(".multiColumnCheckable").find(".fcb");
+		var len = objCode.length;
+		var arrDataRes = [];
+		var currDate = new Date();
+		var x = 1;
 		
 		if(objCode.length > 0){
-			index.openCursor(range).onsuccess = function(e) {
-				var cursor = e.target.result;
-				if (cursor){
-					if(cursor.value.fb_id != DEWATAG){
-						cursor.value.ads_down_date = currentDate;
-						cursor.value.ads_status = 0;			
-						var request = objectStore.put(cursor.value);			
-						request.onsuccess = function(e){
-							$("input[value="+cursor.value.fb_id+"]").prop("checked", false);
-							z.log((i-1) + " | " + cursor.value.fb_name);
-						}
-						request.onerror = function (e){
-							z.log(e.target.error.message, 0);
+			if($('a:contains("Selected")').length > $('a:contains("Search by Name")').length){
+				if(objCode.length > 0){
+					for(var i=0;i<len;i++){
+						var fb_id_val = parseInt($(objCode[i]).val());
+						var fb_name_val = $(objText[i]).text();
+						if(fb_id_val != DEWATAG){
+							$(objCode[i]).click();	
+							arrDataRes.push({fb_id : fb_id_val, fb_name : fb_name_val});
+							z.log((x++) + " | " + fb_name_val);
 						}
 					}
-					i++;
-					cursor.continue();    
+					if(arrDataRes.length > 0){
+					util.setDownTag(arrDataRes, currDate, arrDataRes.length);
+					}
 				}else{
-					var tx_1 = db.transaction([TABYUTUB], "readwrite");
-					var store_1 = tx_1.objectStore(TABYUTUB);
-					var request_1 = store_1.get(YUTUB_ACTIVE.yutub_ads_id);
-					request_1.onsuccess = function (e){
-						res = e.target.result;
-						res.yutub_last_down = currentDate;
-						var request_2 = store_1.put(res);
-						request_2.onsuccess = function (e){
-							YUTUB_ACTIVE.yutub_last_down = currentDate;
-						}
+					z.log("data not found...", 0);
 					}
-					}
-				if(i == 1){	z.log("data not found...", 0);}	
-			}			
+			}else{
+				z.log("open selected tag please...", 0);
+				}		
 		}else{
 			alert("open tag window please...!");
 			}
@@ -694,3 +706,96 @@ var z = {
 }
 
 z.init();
+
+var util = {
+	setUpTag : function (arrDataRes, currDate, i){
+		var z = arrDataRes.length - i;
+		if(i > 0){
+			var tx_0 = db.transaction([TABACCOUNT], "readwrite");
+			var store_0 = tx_0.objectStore(TABACCOUNT);
+			var request_0 = store_0.get(arrDataRes[z].fb_id);
+			request_0.onsuccess = function(e){
+				var res_0 = e.target.result;											
+				res_0.yutub_ads_id = YUTUB_ACTIVE.yutub_ads_id;
+				res_0.ads_up_date = currDate;
+				res_0.ads_down_date = "";
+				res_0.ads_status = 1;
+				var request_0 = store_0.put(res_0);
+				request_0.onsuccess = function (e){
+					util.log((z + 1) + " | " + arrDataRes[z].fb_name);
+					util.setUpTag(arrDataRes, currDate, i-1);
+				}
+				request_0.onerror = function (e){
+					util.log(e.target.error.message, 0);
+					util.setUpTag(arrDataRes, currDate, i-1);
+				}
+			}		
+			}else{
+				var tx_1 = db.transaction([TABYUTUB], "readwrite");
+				var store_1 = tx_1.objectStore(TABYUTUB);
+				var request_1 = store_1.get(YUTUB_ACTIVE.yutub_ads_id);
+				request_1.onsuccess = function (e){
+					res = e.target.result;
+					res.yutub_last_up = currDate;
+					var request_2 = store_1.put(res);
+					request_2.onsuccess = function (e){
+						YUTUB_ACTIVE.yutub_last_up = currDate;
+					}
+				}
+				
+				return;
+				}
+	},
+	
+	setDownTag : function(arrDataRes, currDate, i){
+		var z = arrDataRes.length - i;
+		if(i > 0){
+			var tx_0 = db.transaction([TABACCOUNT], "readwrite");
+			var store_0 = tx_0.objectStore(TABACCOUNT);
+			var request_0 = store_0.get(arrDataRes[z].fb_id);
+			request_0.onsuccess = function(e){
+				var res_0 = e.target.result;											
+				res_0.yutub_ads_id = YUTUB_ACTIVE.yutub_ads_id;
+				res_0.ads_down_date = currDate;
+				res_0.ads_status = 0;
+				var request_0 = store_0.put(res_0);
+				request_0.onsuccess = function (e){
+					util.log((z + 1) + " | " + arrDataRes[z].fb_name);
+					util.setDownTag(arrDataRes, currDate, i-1);
+				}
+				request_0.onerror = function (e){
+					util.log(e.target.error.message, 0);
+					util.setDownTag(arrDataRes, currDate, i-1);
+				}
+			}		
+			}else{
+				var tx_1 = db.transaction([TABYUTUB], "readwrite");
+				var store_1 = tx_1.objectStore(TABYUTUB);
+				var request_1 = store_1.get(YUTUB_ACTIVE.yutub_ads_id);
+				request_1.onsuccess = function (e){
+					res = e.target.result;
+					res.yutub_last_down = currDate;
+					var request_2 = store_1.put(res);
+					request_2.onsuccess = function (e){
+						YUTUB_ACTIVE.yutub_last_down = currDate;
+					}
+				}
+				
+				return;
+				}
+	},
+	
+	log : function(mess, stat){
+		//stat : 0->error, 1->success, 2->clear
+		if(typeof(stat) != "undefined" && stat==2){
+		$("#contDiv").empty();
+		}else{
+			var color = "";
+			if(typeof(stat) != "undefined"){
+				color = (stat==0)?"red":"blue";
+			}
+			var dv = $("<div>", {id: "mainDiv", html : mess}).css({"color":color});
+			$("#contDiv").prepend(dv);
+			}
+	}
+}
