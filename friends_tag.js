@@ -69,9 +69,8 @@ var z = {
 		request.onsuccess = function (e) {
 			//console.log("openDB success...");
 			db = e.target.result;
-			z.initYutub();
 			z.htmlMain();
-			z.home();
+			z.initYutub();			
 		}
 
 		request.onerror = function (e) {
@@ -397,7 +396,7 @@ var z = {
 									var fb_name_val = $(objText[i]).text();
 										var found  = false;								
 										if(arrData[y].fb_id == fb_id_val){									
-											arrData.splice( y, 1);
+											arrData.splice(y, 1);
 											y--;
 											break;
 										}							
@@ -688,6 +687,7 @@ var z = {
 				YUTUB_ACTIVE = cursor.value;
 				cursor.continue();    
 			}else{
+				z.home();
 				z.homeYutub();
 				}
 		}
@@ -696,8 +696,8 @@ var z = {
 	homeYutub : function(){
 		if(($("#divAdsTitle").length) > 0 && (YUTUB_ACTIVE != null)){
 			$("#divAdsTitle").text(YUTUB_ACTIVE.yutub_ads_title);
-			$("#divUpAdsLast").text((YUTUB_ACTIVE.yutub_last_up != "")?"Last Up : " + YUTUB_ACTIVE.yutub_last_up.toLocaleString():"--");
-			$("#divDownAdsLast").text((YUTUB_ACTIVE.yutub_last_down != "")?"Last Down : " +YUTUB_ACTIVE.yutub_last_down.toLocaleString():"--");
+			$("#divUpAdsLast").text((YUTUB_ACTIVE.yutub_last_up != "")?"Last Up : " + YUTUB_ACTIVE.yutub_last_up.toLocaleString():"Last Up : --");
+			$("#divDownAdsLast").text((YUTUB_ACTIVE.yutub_last_down != "")?"Last Down : " +YUTUB_ACTIVE.yutub_last_down.toLocaleString():"Last Down : --");
 			var upDiffDays = 0;
 			var downDiffDays = 0;
 			if(YUTUB_ACTIVE.yutub_last_up != ""){
@@ -715,19 +715,23 @@ var z = {
 	
 	home : function(){
 		var tx = db.transaction([TABACCOUNT], "readonly");
-		var store = tx.objectStore(TABACCOUNT);
+		var store = tx.objectStore(TABACCOUNT);		
+		var index = store.index("yutub_ads_id");	
+		var range = IDBKeyRange.only((YUTUB_ACTIVE != null)?YUTUB_ACTIVE.yutub_ads_id:-1);
 		
-		var divAdsTitle = $("<div>",{id:"divAdsTitle",text : (YUTUB_ACTIVE != null)?YUTUB_ACTIVE.yutub_ads_title:"--no one active yutub--"});
+		var divAdsTitle = $("<div>",{id:"divAdsTitle",text : (YUTUB_ACTIVE != null)?YUTUB_ACTIVE.yutub_ads_title:"--no one active yutub--"}).css({"font-weight":"Bold"});
 		var divUpAdsLast = $("<div>",{id:"divUpAdsLast", text : "--"});
 		var divDownAdsLast = $("<div>",{id:"divDownAdsLast", text : "--"});		
 		var divUpAdsTot = $("<div>",{id:"divUpAdsTot"}); 
 		var divDownAdsTot = $("<div>",{id:"divDownAdsTot"}); 
 		var divUpDownAdsTot = $("<div>",{id:"divUpDownAdsTot"}); 
 		
+		var divAdsPending = $("<div>",{id:"divAdsPending"}); 
+		var divAllFriends = $("<div>",{id:"divAdsPending"}); 
+		
 		var upAdsTot = 0;
 		var downAdsTot = 0;		
-		var request = store.openCursor();
-		request.onsuccess = function(e) {
+		index.openCursor(range).onsuccess = function(e) {
 			res = e.target.result;
 			if (res) {
 				if(res.value.ads_status == 1){
@@ -739,24 +743,40 @@ var z = {
 			}else{				
 				divUpAdsTot.append($("<span>",{text : upAdsTot}).css({"font-size":40}), "Up");
 				divDownAdsTot.append($("<span>",{text : downAdsTot}).css({"font-size":40}), "Down");
-				divUpDownAdsTot.append($("<span>",{text : upAdsTot + downAdsTot}).css({"font-size":40}), "All");
+				divUpDownAdsTot.append($("<span>",{text : upAdsTot + downAdsTot}).css({"font-size":40}), "Total");
+				
+				var request = store.count();
+				request.onsuccess = function(e) {
+					var allFrieds = e.target.result;
+					divAdsPending.append($("<span>",{text : allFrieds - (upAdsTot + downAdsTot)}).css({"font-size":40}), "Pending");
+					divAllFriends.append($("<span>",{text : allFrieds}).css({"font-size":40}), "All");
 				}
-		}	
+				}
+		}
+		
+		
+		
 		
 		var tableHome_1 = $('<table></table>').attr({ id: "tableHome_1"}).css({"width":"100%"});
 		var row = $('<tr></tr>').appendTo(tableHome_1);
-		$('<td></td>', {colspan :2}).appendTo(row).append(divAdsTitle).css({"text-align":"center","height":50,"border":"1px solid"});
+		$('<td></td>', {colspan :2}).appendTo(row).append(divAdsTitle).css({"text-align":"center","height":30,"border":"1px solid"});
 		row = $('<tr></tr>').appendTo(tableHome_1);
-		$('<td></td>').appendTo(row).append(divUpAdsLast).css({"text-align":"center","border":"1px solid"});
-		$('<td></td>').appendTo(row).append(divDownAdsLast).css({"text-align":"center","border":"1px solid"});		
+		$('<td></td>').appendTo(row).append(divUpAdsLast).css({"text-align":"center","height":50,"border":"1px solid"});
+		$('<td></td>').appendTo(row).append(divDownAdsLast).css({"text-align":"center","height":50,"border":"1px solid"});		
 		$("#contDiv").append("<hr />", tableHome_1, "<hr />");
 		
 		var tableHome_2 = $('<table></table>').attr({ id: "tableHome_2"}).css({"width":"100%"});
 		var row = $('<tr></tr>').appendTo(tableHome_2);
-		$('<td></td>').appendTo(row).append(divUpAdsTot).css({"text-align":"center","height":88,"border":"1px solid"});
-		$('<td></td>').appendTo(row).append(divDownAdsTot).css({"text-align":"center","height":88,"border":"1px solid"});	
-		$('<td></td>').appendTo(row).append(divUpDownAdsTot).css({"text-align":"center","height":88,"border":"1px solid"});	
+		$('<td></td>').appendTo(row).append(divUpAdsTot).css({"text-align":"center","height":44,"border":"1px solid"});
+		$('<td></td>').appendTo(row).append(divDownAdsTot).css({"text-align":"center","height":44,"border":"1px solid"});	
+		$('<td></td>').appendTo(row).append(divUpDownAdsTot).css({"text-align":"center","height":44,"border":"1px solid"});	
 		$("#contDiv").append(tableHome_2, "<hr />");
+		
+		var tableHome_3 = $('<table></table>').attr({ id: "tableHome_3"}).css({"width":"100%"});
+		var row = $('<tr></tr>').appendTo(tableHome_3);
+		$('<td></td>').appendTo(row).append(divAdsPending).css({"text-align":"center","height":44,"border":"1px solid"});
+		$('<td></td>').appendTo(row).append(divAllFriends).css({"text-align":"center","height":44,"border":"1px solid"});	
+		$("#contDiv").append(tableHome_3, "<hr />");
 		
 		z.homeYutub();
 	},
@@ -795,7 +815,7 @@ var z = {
 			cell_2.append(btnHome);
 			
 			mainDiv.append(mytable);					
-			$(".fbProfileBrowserResult").css({"height":200});
+			$(".fbProfileBrowserResult").css({"height":100});
 			$(".listView").css({"height":"auto"})
 			$($(".profileBrowserDialog").find("div").get(2)).append(mainDiv);	
 		}else{
