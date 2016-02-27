@@ -200,8 +200,13 @@ var z = {
 					request = store.add(expData[i]);
 					z.log((parseInt(i)+1) + " | " + expData[i].fb_name);
 				}else if((type == 2) && (typeof(expData[i].yutub_ads_title) != "undefined")){
-					expData[i].yutub_ads_date = new Date(expData[i].yutub_ads_date);
+					expData[i].yutub_ads_date = (expData[i].yutub_ads_date != "")?new Date(expData[i].yutub_ads_date):"";
+					expData[i].yutub_last_up = (expData[i].yutub_last_up != "")?new Date(expData[i].yutub_last_up):"";
+					expData[i].yutub_last_down = (expData[i].yutub_last_down != "")?new Date(expData[i].yutub_last_down):"";
 					request = store.add(expData[i]);
+					if(expData[i].yutub_ads_status == 1){
+						YUTUB_ACTIVE = expData[i];
+					}					
 					z.log((parseInt(i)+1) + " | " + expData[i].yutub_ads_title);
 					}else{
 						z.log("Dump data not valid..!", 0);
