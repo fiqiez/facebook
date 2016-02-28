@@ -314,6 +314,9 @@ var z = {
 											if((maxRep++) == 5){
 												util.log((i+1) + " | " + arrData[i].fb_name, 0);
 												i++;
+												maxRep = 0;
+												$(".fbProfileBrowserResult").click();
+												$(".fbProfileBrowserResult").focus();
 												}								
 											}
 											
@@ -814,7 +817,7 @@ var z = {
 			var row = $('<tr></tr>').appendTo(mytable);
 			var cell_1 = $('<td></td>').appendTo(row).append(contDiv).css({"vertical-align":"top"});  
 			var cell_2 = $('<td></td>').appendTo(row).css({"width":10,"vertical-align":"top"});
-			cell_2.append(btnUpdTag, btnDelTag, btnUnTagL, btnUnTagD, "<hr />");
+			cell_2.append(btnUpdTag, btnDelTag, btnUnTagD, btnUnTagL, "<hr />");
 			cell_2.append(btnTabFB, btnAddFB, btnDelFB, btnExpFB, btnImpFB, "<hr />");			
 			cell_2.append(btnTabYutub, btnDelYutub, btnExpYutub, btnImpYutub, "<hr />");
 			cell_2.append(btnHome);
@@ -867,7 +870,8 @@ var util = {
 					}
 				}
 				
-				util.log("setUpTag success...", 1);
+				util.log("submit on progress.. please wait!", 1);
+				$('.uiOverlayButton').get(0).click();
 				return;
 				}
 	},
@@ -906,7 +910,8 @@ var util = {
 					}
 				}
 				
-				util.log("setDownTag success...", 1);
+				util.log("submit on progress.. please wait!", 1);
+				$('.uiOverlayButton').get(0).click();
 				return;
 				}
 	},
