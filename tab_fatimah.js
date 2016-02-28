@@ -481,7 +481,6 @@ var expData = [
 {"account_id":1,"fb_id":100000814618630,"fb_name":"Candra Uciha","fb_status":1,"yutub_ads_id":0,"ads_status":0,"ads_up_date":"","ads_down_date":""},
 {"account_id":1,"fb_id":100000815680235,"fb_name":"Ryan","fb_status":1,"yutub_ads_id":0,"ads_status":0,"ads_up_date":"","ads_down_date":""},
 {"account_id":1,"fb_id":100000818200016,"fb_name":"MuHamad Torki","fb_status":1,"yutub_ads_id":0,"ads_status":0,"ads_up_date":"","ads_down_date":""},
-{"account_id":1,"fb_id":100000833314223,"fb_name":"Don Martin","fb_status":1,"yutub_ads_id":1,"ads_status":1,"ads_up_date":"2016-02-28T09:58:24.373Z","ads_down_date":""},
 {"account_id":1,"fb_id":100000833623382,"fb_name":"Paulus Wahyu P","fb_status":1,"yutub_ads_id":1,"ads_status":0,"ads_up_date":"2016-02-24T13:09:32.701Z","ads_down_date":"2016-02-25T12:00:12.419Z"},
 {"account_id":1,"fb_id":100000834241267,"fb_name":"Panji Fajar Kurniawan","fb_status":1,"yutub_ads_id":0,"ads_status":0,"ads_up_date":"","ads_down_date":""},
 {"account_id":1,"fb_id":100000835144523,"fb_name":"Handoko Syahputra","fb_status":1,"yutub_ads_id":0,"ads_status":0,"ads_up_date":"","ads_down_date":""},
