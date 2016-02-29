@@ -15,6 +15,7 @@ var TABYUTUB = "yutub";
 var TABACCOUNT = null;
 var ACCOUNT_ID = null;
 var FB_ID = null;
+var FB_POST_ID = null;
 var YUTUB_ADS_ID = null;
 var YUTUB_ACTIVE = null;
 
@@ -63,6 +64,9 @@ var z = {
 				store.createIndex('ads_status', 'ads_status', {
 					unique: false
 				});
+				store.createIndex('ads_status, fb_post_id', ['ads_status', 'fb_post_id'], {
+					unique: false
+				});
 			}
 		}
 
@@ -92,7 +96,8 @@ var z = {
 					account_id : ACCOUNT_ID,
 					fb_id : parseInt($(objCode[i]).val()), 
 					fb_name : $(objText[i]).text(),
-					fb_status : 1,					
+					fb_status : 1,
+					fb_post_id : 0,
 					yutub_ads_id : 0,
 					ads_status : 0,
 					ads_up_date : "",
@@ -178,7 +183,25 @@ var z = {
 			  strData += JSON.stringify(res.value)+",<br />";
 			  res.continue();
 			}else{
-				 z.log(strData.slice(0, -7) + "<br />]");
+				z.log(strData.slice(0, -7) + "<br />]");				 
+				var divCopy = $("<div>",{ id : "divCopy", class : "divCopying", html : $("#contDiv").html()}).css({"float":"left","text-align":"left"});				
+				var btnCopy = $("<button />",{text : 'Copy to Clipboard', click : function(){
+					var elmCopy = document.querySelector('.divCopying');  
+					var range = document.createRange();  
+					range.selectNode(elmCopy);  
+					window.getSelection().addRange(range);
+					try {  
+						document.execCommand('copy'); 
+					} catch(err) {  
+						console.log('Oops, unable to copy');  
+						}					 
+				 }});
+				 var btnCopyContainer = $("<div>").append(btnCopy).css({"float":"right","text-align":"right","width":200,"height":30});
+				 
+				 z.log("", 2);				 
+				 z.log(divCopy);
+				 z.log(btnCopyContainer);			 
+				 $("input[placeholder='Search all friends']").focus();
 				}
 		};
 	},
@@ -204,7 +227,7 @@ var z = {
 					expData[i].yutub_last_up = (expData[i].yutub_last_up != "")?new Date(expData[i].yutub_last_up):"";
 					expData[i].yutub_last_down = (expData[i].yutub_last_down != "")?new Date(expData[i].yutub_last_down):"";
 					request = store.add(expData[i]);
-					if(expData[i].yutub_ads_status == 1){
+					if(expData[i].yutub_ads_status == 1 && expData[i].yutub_account_id == ACCOUNT_ID){
 						YUTUB_ACTIVE = expData[i];
 					}					
 					z.log((parseInt(i)+1) + " | " + expData[i].yutub_ads_title);
@@ -295,7 +318,7 @@ var z = {
 										arrDataLen = MAXTAG;
 									}
 									
-									var timer = setInterval(function(){
+									var timer = setInterval(function(maxRep){
 										$("input[placeholder='Search all friends']").val(arrData[i].fb_name).focus();
 										var objCB = $("input[value='" + arrData[i].fb_id + "']");
 										if(objCB.length > 0){
@@ -303,9 +326,11 @@ var z = {
 											objCB.focus();
 											found = true;
 										}
-										if(found){
+										if(found){											
+											if(arrData[i].fb_id != DEWATAG){												
+												arrDataRes.push(arrData[i]);
+											}
 											util.log((i+1) + " | " + arrData[i].fb_name);
-											arrDataRes.push(arrData[i]);
 											
 											i++;
 											maxRep = 0;
@@ -386,8 +411,8 @@ var z = {
 
 		var tx = db.transaction([TABACCOUNT], "readonly");
 		var store = tx.objectStore(TABACCOUNT);		
-		var index = store.index("ads_status");	
-		var range = IDBKeyRange.only(1);
+		var index = store.index("ads_status, fb_post_id");	
+		var range = IDBKeyRange.only([1, FB_POST_ID]);
 		var arrData = [];
 		
 		if(objCode.length > 0){
@@ -413,7 +438,7 @@ var z = {
 							if(arrData.length > 0){
 								if(type == 0){
 									for(var k in arrData){									
-										z.log($("<a>",{text : (arrData.length - k)+" | "+arrData[k].fb_name,href : 'https://www.facebook.com/search/top/?q=' + arrData[k].fb_name,target :'_blank'}));
+										z.log($("<a>",{text : (parseInt(k)+1)+" | "+arrData[k].fb_name,href : 'https://www.facebook.com/search/top/?q=' + arrData[k].fb_name,target :'_blank'}));
 									}
 									}else if(type == 1){
 										var sure = window.confirm("delete unTag friends?");
@@ -825,7 +850,8 @@ var z = {
 			mainDiv.append(mytable);					
 			$(".fbProfileBrowserResult").css({"height":100});
 			$(".listView").css({"height":"auto"})
-			$($(".profileBrowserDialog").find("div").get(2)).append(mainDiv);	
+			$($(".profileBrowserDialog").find("div").get(2)).append(mainDiv);
+			FB_POST_ID = parseInt($("form[class='_s']").attr('action').split("=")[1]);
 		}else{
 			alert("Open tag window please...!");
 			}
@@ -847,6 +873,7 @@ var util = {
 				res_0.ads_up_date = currDate;
 				res_0.ads_down_date = "";
 				res_0.ads_status = 1;
+				res_0.fb_post_id = FB_POST_ID;
 				var request_0 = store_0.put(res_0);
 				request_0.onsuccess = function (e){
 					util.log((z + 1) + " | " + arrDataRes[z].fb_name);
@@ -923,6 +950,7 @@ var util = {
 			var store_0 = tx_0.objectStore(TABACCOUNT);			
 			var request_0 = store_0.delete(arrDataRes[z].fb_id);
 				request_0.onsuccess = function (e){
+					window.open('https://www.facebook.com/search/top/?q=' + arrDataRes[z].fb_name, '_blank');
 					util.log((z + 1) + " | " + arrDataRes[z].fb_name);
 					util.delTagFriend(arrDataRes, i-1);
 				}
