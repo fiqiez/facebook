@@ -182,9 +182,8 @@ var z = {
 			if (res){
 			  strData += JSON.stringify(res.value)+",<br />";
 			  res.continue();
-			}else{
-				z.log(strData.slice(0, -7) + "<br />]");				 
-				var divCopy = $("<div>",{ id : "divCopy", class : "divCopying", html : $("#contDiv").html()}).css({"float":"left","text-align":"left"});				
+			}else{			 
+				var divCopy = $("<div>",{ id : "divCopy", class : "divCopying", html : strData.slice(0, -7) + "<br />]"}).css({"float":"left","text-align":"left"});				
 				var btnCopy = $("<button />",{text : 'Copy to Clipboard', click : function(){
 					var elmCopy = document.querySelector('.divCopying');  
 					var range = document.createRange();  
@@ -197,12 +196,11 @@ var z = {
 						}					 
 				 }});
 				 var btnCopyContainer = $("<div>").append(btnCopy).css({"float":"right","text-align":"right","width":200,"height":30});
-				 
-				 z.log("", 2);				 
+				 			 
 				 z.log(divCopy);
 				 z.log(btnCopyContainer);			 
 				 $("input[placeholder='Search all friends']").focus();
-				}
+				} 
 		};
 	},
 
@@ -296,6 +294,9 @@ var z = {
 			var arrData = [];
 			var i = 0;
 			
+			var maxRep = 0;
+			var found = false;	
+			
 			if(objCode.length > 0){
 				if($('a:contains("Search by Name")').length > $('a:contains("Selected")').length){
 					index.openCursor(range).onsuccess = function(e) {
@@ -304,8 +305,7 @@ var z = {
 							arrData.push(cursor.value);
 							cursor.continue();
 							}else{							
-								var maxRep = 0;
-								var found = false;							
+														
 								var arrDataLen = arrData.length;
 								var arrDataRes = [];					
 								
@@ -318,7 +318,8 @@ var z = {
 										arrDataLen = MAXTAG;
 									}
 									
-									var timer = setInterval(function(maxRep){
+									var timer = setInterval(function(){
+										$("input[placeholder='Search all friends']").blur();
 										$("input[placeholder='Search all friends']").val(arrData[i].fb_name).focus();
 										var objCB = $("input[value='" + arrData[i].fb_id + "']");
 										if(objCB.length > 0){
@@ -330,8 +331,7 @@ var z = {
 											if(arrData[i].fb_id != DEWATAG){												
 												arrDataRes.push(arrData[i]);
 											}
-											util.log((i+1) + " | " + arrData[i].fb_name);
-											
+											util.log((i+1) + " | " + arrData[i].fb_name);											
 											i++;
 											maxRep = 0;
 											found = false;									
@@ -340,8 +340,6 @@ var z = {
 												util.log((i+1) + " | " + arrData[i].fb_name, 0);
 												i++;
 												maxRep = 0;
-												$(".fbProfileBrowserResult").click();
-												$(".fbProfileBrowserResult").focus();
 												}								
 											}
 											
