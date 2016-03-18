@@ -872,12 +872,12 @@ var util = {
 				res_0.ads_down_date = "";
 				res_0.ads_status = 1;
 				res_0.fb_post_id = FB_POST_ID;
-				var request_0 = store_0.put(res_0);
-				request_0.onsuccess = function (e){
+				var request_1 = store_0.put(res_0);
+				request_1.onsuccess = function (e){
 					util.log((z + 1) + " | " + arrDataRes[z].fb_name);
 					util.setUpTag(arrDataRes, currDate, i-1);
 				}
-				request_0.onerror = function (e){
+				request_1.onerror = function (e){
 					util.log(e.target.error.message, 0);
 					util.setUpTag(arrDataRes, currDate, i-1);
 				}
@@ -908,19 +908,24 @@ var util = {
 			var store_0 = tx_0.objectStore(TABACCOUNT);
 			var request_0 = store_0.get(arrDataRes[z].fb_id);
 			request_0.onsuccess = function(e){
-				var res_0 = e.target.result;											
-				res_0.yutub_ads_id = YUTUB_ACTIVE.yutub_ads_id;
-				res_0.ads_down_date = currDate;
-				res_0.ads_status = 0;
-				var request_0 = store_0.put(res_0);
-				request_0.onsuccess = function (e){
-					util.log((z + 1) + " | " + arrDataRes[z].fb_name);
+				var res_0 = e.target.result;	
+				if(typeof(res_0) != "undefined"){														
+					res_0.yutub_ads_id = YUTUB_ACTIVE.yutub_ads_id;
+					res_0.ads_down_date = currDate;
+					res_0.ads_status = 0;
+					var request_1 = store_0.put(res_0);
+					request_1.onsuccess = function (e){
+						util.log((z + 1) + " | " + arrDataRes[z].fb_name);
+						util.setDownTag(arrDataRes, currDate, i-1);
+					}
+					request_1.onerror = function (e){
+						util.log(e.target.error.message, 0);
+						util.setDownTag(arrDataRes, currDate, i-1);
+					}
+				}else{
+					util.log((z + 1) + " | error", 0);
 					util.setDownTag(arrDataRes, currDate, i-1);
-				}
-				request_0.onerror = function (e){
-					util.log(e.target.error.message, 0);
-					util.setDownTag(arrDataRes, currDate, i-1);
-				}
+					}
 			}		
 			}else{
 				var tx_1 = db.transaction([TABYUTUB], "readwrite");
