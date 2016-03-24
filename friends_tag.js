@@ -369,7 +369,9 @@ var z = {
 	},
 
 	deleteTag : function(){	
-		var objCode = $(".multiColumnCheckable").find(".checkbox");
+		//var objCode = $(".multiColumnCheckable").find(".checkbox");
+		//var objText = $(".multiColumnCheckable").find(".fcb");
+		var objCode = $($("table[role='presentation']").find('div').get(1)).find("a").get(0)
 		var objText = $(".multiColumnCheckable").find(".fcb");
 		var len = objCode.length;
 		var arrDataRes = [];
@@ -813,9 +815,9 @@ var z = {
 	},
 	
 	htmlMain : function(){
-		if($(".fbProfileBrowserResult").length > 0){
+		if($("div[display='block']").length > 0){
 			var mainDiv = $("<div>", {id: "mainDiv"}).css({"padding":2});
-			var contDiv = $("<div>", {id: "contDiv"}).css({"padding":2,"border":"1px solid","height":295,"width":460,"overflow": "scroll"});
+			var contDiv = $("<div>", {id: "contDiv"}).css({"padding":2,"border":"1px solid","height":295,"width":405,"overflow": "scroll"});
 			
 			var btnUpdTag = $('<button/>',{text : 'ModifyTag',click : function(){ z.updateTag();}}).css({"margin-bottom":2,"width":73});	
 			var btnDelTag = $('<button/>',{text : 'DeleteTag',click : function(){ z.deleteTag();}}).css({"margin-bottom":2,"width":73});			
@@ -848,11 +850,17 @@ var z = {
 			mainDiv.append(mytable);					
 			$(".fbProfileBrowserResult").css({"height":100});
 			$(".listView").css({"height":"auto"})
-			$($(".profileBrowserDialog").find("div").get(2)).append(mainDiv);
-			FB_POST_ID = parseInt($("form[class='_s']").attr('action').split("=")[1]);
+			//$($(".profileBrowserDialog").find("div").get(2)).append(mainDiv);
+			$("div[display='block']").append(mainDiv);
+			//FB_POST_ID = parseInt($("form[class='_s']").attr('action').split("=")[1]);
+			var objEditOpt = $("a[data-feed-option-name='FeedEditOption']");			
+			FB_POST_ID = $(objEditOpt.get(objEditOpt.length-1)).attr("ajaxify").split("=")[1].split("&")[0];
 		}else{
 			alert("Open tag window please...!");
 			}
+			
+			//$($("table[role='presentation']").find('div').get(1)).css({"height":100,"overflow": "scroll"})
+			
 	}
 }
 
